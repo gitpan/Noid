@@ -8,7 +8,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our $VERSION;
-$VERSION = sprintf "%d.%02d", q$Name: Release-0-422 $ =~ /Release-(\d+)-(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Name: Release-0-423 $ =~ /Release-(\d+)-(\d+)/;
 our @EXPORT_OK = qw(
 	addmsg bind checkchar dbopen dbclose dbcreate dbinfo
 	errmsg fetch getnoid hold hold_release hold_set
@@ -2446,12 +2446,11 @@ Probably.  Please report to jak at ucop dot edu.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2002-2004 UC Regents.  All rights reserved.
-BSD-type open source license.
+Copyright 2002-2004 UC Regents.  BSD-type open source license.
 
 =head1 SEE ALSO
 
-L<perl(1)>, L<http://www.cdlib.org/inside/diglib/ark/>
+L<dbopen(3)>, L<perl(1)>, L<http://www.cdlib.org/inside/diglib/ark/>
 
 =head1 AUTHOR
 

@@ -5,6 +5,8 @@ MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
 noid
 README
+noid.pdf
+Noid.pdf
 t/bind.t
 t/dbcreate.t
 t/noid1.t
@@ -15,3 +17,4 @@ t/noid5.t
 t/noid6.t
 t/noid7.t
 t/noid8.t
+VERSION

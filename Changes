@@ -1,6 +1,7 @@
-Revision history for Perl extension Noid.
+Revision history for noid script and Noid module.
 
-0.01  Thu Apr 29 08:03:56 2004
-	- original version; created by h2xs 1.23 with options
-		-AX -n Noid
+0.423	Documentation fixes.
 
+0.422	Fixed flock bug.
+
+0.421	Initial release.
