@@ -11,7 +11,7 @@ $ENV{'SHELL'} = "/bin/sh";
 my ($report, $erc);
 
 sub short { my( $template )=@_;
-	unlink("NOID/noid.bdb", "NOID/noid.bdb");
+	system("/bin/rm -rf ./NOID > /dev/null 2>&1 ");
 	$report = Noid::dbcreate(".", "jak", $template, "short");
 	! defined($report) and
 		return(Noid::errmsg());

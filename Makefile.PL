@@ -5,11 +5,13 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     EXE_FILES         => [ 'noid' ],
     NAME              => 'Noid',
-    VERSION_FROM      => 'lib/Noid.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/Noid.pm',    # finds $VERSION
     PREREQ_PM         => {
 	'BerkeleyDB'		=> '0.20', # and sleepycat BDB C lib > 2.7.7
-	'Text::ParseWords'	=> '0', # or minimum workable version
-	'Getopt::Long'		=> '0', # or minimum workable version
+	'Fcntl'			=> '0',
+	'Getopt::Long'		=> '0',
+	'Sys::Hostname'		=> '0',
+	'Text::ParseWords'	=> '0',
     },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Noid.pm', # retrieve abstract from module
