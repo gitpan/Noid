@@ -7,10 +7,8 @@ use warnings;
 require Exporter;
 our @ISA = qw(Exporter);
 
-#our $VERSION = '0.41';
 our $VERSION;
-#Name: Release-0-41
-$VERSION = sprintf "%d.%02d", q$Name: Release-0-421 $ =~ /Release-(\d+)-(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Name: Release-0-422 $ =~ /Release-(\d+)-(\d+)/;
 our @EXPORT_OK = qw(
 	addmsg bind checkchar dbopen dbclose dbcreate dbinfo
 	errmsg fetch getnoid hold hold_release hold_set
@@ -891,7 +889,7 @@ sub dbopen { my( $dbname, $flags )=@_;
 	my $timeout = 5;	# max number of seconds to wait for lock
 	my $locktype = (($flags & DB_RDONLY) ? LOCK_SH : LOCK_EX);
 
-	! sysopen(NOIDLOCK, $lockfile, O_RDONLY | O_CREAT) and
+	! sysopen(NOIDLOCK, $lockfile, O_RDWR | O_CREAT) and
 		addmsg(undef, "cannot open \"$lockfile\": $!"),
 		return undef;
 	eval {

@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Noid
-version:      0.421
+version:      0.422
 version_from: lib/Noid.pm
 installdirs:  site
 requires:

@@ -36,9 +36,9 @@ INSTALLATION
 
 If not already unpacked, unpack the Noid suite with
 
-   tar xzf Noid-0.421.tar.gz
+   tar xzf Noid-0.422.tar.gz
 
-after adjusting the version number as needed.  Version 0.421 is known to
+after adjusting the version number as needed.  Version 0.422 is known to
 pass build tests on Linux (SuSE 9.0, RH 9, RH 7), SunOS 5.8, Mac OS X,
 and NetBSD 1.6.2.
 
