@@ -55,7 +55,7 @@ use BerkeleyDB;
 use Noid;
 
 my $web = 0;
-my ($dbdir, $dbname, $debug, $ver, $help, $contact, $bulkcmd);
+my ($dbdir, $dbname, $debug, $locktest, $ver, $help, $contact, $bulkcmd);
 my ($template, $snaa, $total);
 my (@valid_helptopics, %info);		# purposely undefined for now
 my @valid_commands = qw(
@@ -64,20 +64,15 @@ my @valid_commands = qw(
 );
 
 # yyy make a noidmail (email robot interface?)
-# xxx location field for redirect should include a discriminant
+# yyy location field for redirect should include a discriminant
 #     eg, ^c for client choice, ^i for ipaddr, ^f format, ^l language
 #     and ^b for browser type, ^xyz for any http header??
 # yyy add "file" command, like bind, but stores a file, either as file or
 #     in a big concatenation stream (binding offset, length, checksum)?
-# xxx figure out whether validate needs to open the database, and if not,
+# yyy figure out whether validate needs to open the database, and if not,
 #     what that means
-# xxx to notify: include Giarlo, Giaretta, Stack, OCKHAM, Juha, weibel, lannom
-#     all ARK users, DC-p.Id list, DC-pres., ERC list, NDIIPP partners, Rick,
-#     IIPC, ..., Evan Owens, RLG Shelflife, DLib, Ron Daniel, Joe Busch
-#     max planck society: suckfuell@gv.mpg.de, schimmer@mpg-gv.mpg.de,
-#                       i.overkamp@bm.mpg.de, bowman@biochem.mpg.de
 
-# XXXXX for locking and transactions: (1) ask Paul Marquess about what
+# yyy for locking and transactions: (1) ask Paul Marquess about what
 #  Perl interface support for txn and locking really is (2) check into
 #  lock and/or transaction timeout, (3) if I use cursors exclusively for
 #  storage, that may solve everything(?) (eg, no more simple tied assigments,
@@ -102,7 +97,7 @@ my @valid_commands = qw(
 					# see Apache Rewrite mod documentation
 		$| = 1;		# very important to unbuffer the output
 		$bulkcmd = 1;
-		# xxx should we set a timeout to prevent hanging the server?
+		# yyy should we set a timeout to prevent hanging the server?
 	}
 
 	if (! ($contact = who_are_you($web))) {
@@ -112,6 +107,7 @@ my @valid_commands = qw(
 
 	if (! GetOptions(
 		'debug'		=> \$debug,	# flag
+		'locktest=i'	=> \$locktest,	# flag
 		'f=s'		=> \$dbdir,	# filesystem directory name
 		'version'	=> \$ver,	# flag
 		'help'		=> \$help,	# flag
@@ -119,6 +115,13 @@ my @valid_commands = qw(
 		print "error: GetOptions\n";
 		usage(1, 1, "intro");
 		exit(1);
+	}
+	if ($locktest) {
+		$locktest < 0 and
+			print("error: locktest value must be a positive "
+				. "number of seconds to sleep\n"),
+			exit(0);
+		Noid::locktest($locktest);
 	}
 	$web && $debug and
 		print "contact=$contact, pwd=", `pwd`;
@@ -130,7 +133,7 @@ my @valid_commands = qw(
 		exit(0);
 	}
 	if ($help) {
-		# xxx should we encode help output?   print "help:\n";
+		# yyy should we encode help output?   print "help:\n";
 		usage(0, 0, "intro");
 		exit(0);
 	}
@@ -158,7 +161,7 @@ my @valid_commands = qw(
 		print qq@-f option not allowed in URL interface.\n@;
 		return(0);
 	}
-	# Now untaint $dbdir.  xxx we can do better?
+	# Now untaint $dbdir.  yyy we can do better?
 	$dbdir =~ m|^(.*)$| and
 		$dbdir = $1
 	or
@@ -225,7 +228,7 @@ sub do_command {
 	# It should now be safe to turn off strict 'refs' when we
 	# invoke a command via its subroutine name.
 	#if ($#_ < 0) {
-	#	usage(1);	# xxx say something senstive about $command
+	#	usage(1);	# yyy say something senstive about $command
 	#usage(1, 1, "intro");
 	#	return(0);
 	#}
@@ -240,11 +243,11 @@ sub do_command {
 
 # yyy what is the sensible thing to do if (a) no element given,
 #     (b) if no value, or (c) if there are multiple values?
-# xxx vbind(..., template, ...)?  nvbind()?
+# yyy vbind(..., template, ...)?  nvbind()?
 #
 # Returns number of elements successfully bound.
 #
-# XXX what about append at the list vs the string level?
+# yyy what about append at the list vs the string level?
 sub bind { my( $how, $id, $elem, $value )=@_;
 
 	my $validate = 1;
@@ -267,7 +270,7 @@ sub bind { my( $how, $id, $elem, $value )=@_;
 		local $/;			# disappears when scope exits.
 		$/ = "\n\n";			# Means paragraph mode.
 		my $para = <STDIN> || "";
-		chop $para;	# XXX needed?
+		chop $para;	# yyy needed?
 		$para =~ s/^#.*\n//g;		# remove comment lines
 		$para =~ s/\n\s+/ /g;		# merge continuation lines
 		my @elemvals = split(/^([^:]+)\s*:\s*/m, $para);
@@ -293,13 +296,13 @@ sub bind { my( $how, $id, $elem, $value )=@_;
 			! defined($report) and
 				print(STDERR $report, "\n"),
 				usage(1, 1, "bind"),
-				# XXX how/who should log failures in "hard" case
+				# yyy how/who should log failures in "hard" case
 			or
 				$bound++,
 				print($report, "\n"),
 			;
 		}
-		# XXX summarize for log $total and $bound
+		# yyy summarize for log $total and $bound
 		Noid::dbclose($noid);
 		return(defined($report) ? 1 : 0);
 	}
@@ -396,7 +399,7 @@ sub bind { my( $how, $id, $elem, $value )=@_;
 	or
 		print($report, "\n")
 	;
-	# xxx make sure return(0)'s do dbclose...
+	# yyy make sure return(0)'s do dbclose...
 	Noid::dbclose($noid);
 	return(defined($report) ? 1 : 0);
 }
@@ -692,7 +695,7 @@ as "-" to run a block of noid Commands read from stdin or from POST data.@;
 	print "\n";
 	return(1);
 
-# XXX fix these verbose messages
+# yyy fix these verbose messages
 
 my $yyyy = qq@
 Called as "noid", an id generator accompanies every COMMAND.  Called as
@@ -897,8 +900,8 @@ exit 0;
 # with the following reserved for special purposes
 #	/ . - %
 
-# xxx noid example:  shuffle play (as in random song list)
-# xxx bind is pair-wise or triple-wise?  (how to explain consistently)
+# yyy noid example:  shuffle play (as in random song list)
+# yyy bind is pair-wise or triple-wise?  (how to explain consistently)
 
 __END__
 
@@ -1579,7 +1582,9 @@ or any tool that activates URLs.  This section describes a one-time set up
 procedure to make your server aware of minters, followed by another set up
 procedure for each minter.  The one-time procedure involves creating a
 directory in your web server document tree where you will place one or
-more noid minter databases.  In this example, we use F<htdocs/nd>:
+more noid minter databases.  In this example, the directory is F<htdocs/nd>
+and we'll assume the B<noid> script was originally installed in
+F</usr/local/bin>.
 
 	mkdir htdocs/nd
 	cp -p /usr/local/bin/noid htdocs/nd/
@@ -1640,7 +1645,7 @@ already minted,
 
 In this case we stored a URL in "myGoto".  This kind of convention can
 underly a redirection mechanism that is part of an organization's overall
-identifier resolution mechanism.  To retrieve that stored data, 
+identifier resolution strategy.  To retrieve that stored data, 
 
     http://foo.ucop.edu/nd/noidu_kt5?get+13030/kt639k9+myGoto 
 
@@ -1685,7 +1690,8 @@ activates URLs.  This section describes a one-time set up procedure to
 make your server aware of resolvers, followed by another set up procedure
 for each resolver.  The one-time procedure involves creating a directory
 in your web server document tree where you will place one or more noid
-resolver databases.  In this example, we use F<htdocs/nd>:
+resolver databases.  In this example (and in the previous example),
+we use F<htdocs/nd>:
 
 	mkdir htdocs/nd
 	cp -p /usr/local/bin/noid htdocs/nd/
@@ -1727,7 +1733,7 @@ in the resolver database, or minting and binding can take place off the net.
 In what follows, we will assume that you have set up a noid database with
 the same location and template as in the previous section.  As before, the
 server is assumed to run under the user "wwwrun" and the database resides
-in F<htdocs/nd/kt5>.  Consistent with the goal of persistent identification,
+in F<htdocs/nd/kt5>.  As if our intentions included persistent identification,
 the minter in this example is for generating long term identifiers.
 
 	cd htdocs/nd
@@ -1759,7 +1765,7 @@ to restart the server before it will have the desired effect.
    RewriteRule ^_rslv_(/.*)$           $1 [PT]
    # Test: restore value if lookup failed and let come what may.
    RewriteRule ^_rslv_$                %{REQUEST_URI}
-   # Alternative: refer a failed lookup to a global resolver.
+   # Alternative: redirect a failed lookup to a global resolver.
 
 When a request received by the server matches a Rewrite Rule, an attempt
 to resolve it via the running B<noidr...> script is made.  In this example,
@@ -1776,7 +1782,8 @@ would result in a server redirect to
 	http://foo.ucsd.edu/ 
 
 The resolution result for an identifier is whatever the B<get> returns,
-which could as easily have retrieved a stored value or a rule-based value.
+which could as easily have retrieved a stored value as a rule-based
+value (allowing you to redirect many similar identifiers with one rule).
 
 This approach to resolution does not address resolver discovery.
 An identifier found in the wild need not easily reveal whether it is
@@ -1794,9 +1801,9 @@ from any scheme.
 =head1 NOID CHECK DIGIT ALGORITHM
 
 The following describes the Noid Check Digit Algorithm (NCDA).  Digits
-in question are actually "extended digits", an ordered set of digits
-and characters of radix (cardinality) I<R>.  In the example described below
-we use a specific set of I<R=29> characters.
+in question are actually "extended digits", or I<xdigits>, which form
+an ordered set of I<R> digits and characters.  This set has radix I<R>.
+In the example described below, we use a specific set of I<R=29> xdigits.
 
 When applied to substrings of well-formed identifiers, where the length
 of the substring is less than I<R>, the NCDA is "perfect" for single digit
@@ -1805,13 +1812,13 @@ and transposition errors, by far the most common user transcription errors
 College Publishing").  The NCDA is complemented by well-formedness rules
 that confirm the placement of constant data, including fixed labels and
 any characters that are not extended digits.  After running the NCDA on
-the selected substring, the resulting check (extended) digit is used
-either for comparing with a received check digit or for appending to
-the substring prior to issuing the identifier that will contain it.
+the selected substring, the resulting check digit, an xdigit actually,
+is used either for comparing with a received check digit or for appending
+to the substring prior to issuing the identifier that will contain it.
 
 For the algorithm to work, the substring in question must be less than
-I<R> characters.  The extended digit set used in the current instance is a
-sequence of I<R=29> printable characters, or "xdigits", defined as follows:
+I<R> characters.  The extended digit set used in the current instance is
+a sequence of I<R=29> printable characters defined as follows:
 
   xdigit:   0   1   2   3   4   5   6   7   8   9   b   c   d   f   g
    value:   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
@@ -1830,8 +1837,8 @@ digit or transposition error, the relevant substring is extracted and
 its last character is compared to the result of the same computation
 performed on the preceding substring characters.
 
-The computation has two steps.  Consider a base substring (that has no
-check digit appended to it) such as
+The computation has two steps.  Consider a base substring (no check
+digit appended) such as
 
 C<    13030/xf93gt2        >(base substring)
 
@@ -1941,9 +1948,10 @@ value, and security checking enabled.  While its readiness for
 long term application is still being evaluated, it comes with a
 growing suite of regression tests (currently about 250).
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2002-2004 UC Regents.  All rights reserved.
+BSD-type open source license.
 
 =head1 BUGS
 
@@ -1969,15 +1977,16 @@ the creation record containing minter analysis details
 
 =head1 SEE ALSO
 
-L<perl(1)>, L<uuidgen(1)>
+L<perl(1)>, L<uuidgen(1)>, L<http://www.cdlib.org/inside/diglib/ark/>
 
 =head1 AUTHORS
 
-John A. Kunze, Michael A. Russell.
+John A. Kunze, Michael A. Russell
 
 =head1 PREREQUISITES
 
-Perl Modules: L<Noid>, L<BerkeleyDB>, L<Text::ParseWords>, L<Getopt::Long>
+Perl Modules: L<Noid>, L<BerkeleyDB>, L<Text::ParseWords>, L<Getopt::Long>,
+L<Fcntl>, L<Sys::Hostname>
 
 Script Categories:
 

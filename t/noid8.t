@@ -32,8 +32,8 @@ if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
 
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
-my $noid_bin = (-x "./noid" ? "./noid" : "../noid");
-my $noid_cmd = "$noid_bin -f $this_dir ";
+my $noid_bin = "blib/script/noid";
+my $noid_cmd = (-x $noid_bin ? $noid_bin : "../$noid_bin") . " -f $this_dir ";
 
 system("$rm_cmd ; " .
 	"$noid_cmd dbcreate .rde long 13030 cdlib.org noidTest >/dev/null");

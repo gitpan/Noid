@@ -40,8 +40,8 @@ if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
 
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
-my $noid_bin = (-x "./noid" ? "./noid" : "../noid");
-my $noid_cmd = "$noid_bin -f $this_dir ";
+my $noid_bin = "blib/script/noid";
+my $noid_cmd = (-x $noid_bin ? $noid_bin : "../$noid_bin") . " -f $this_dir ";
 
 # Start off by doing a dbcreate.
 # First, though, make sure that the BerkeleyDB files do not exist.

@@ -1,10 +1,13 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Noid
-version:      0.041
+version:      0.42
 version_from: lib/Noid.pm
 installdirs:  site
 requires:
+    BerkeleyDB:                    0.20
+    Getopt::Long:                  0
+    Text::ParseWords:              0
 
 distribution_type: module
 generated_by: ExtUtils::MakeMaker version 6.17

@@ -1,6 +1,6 @@
 package Noid;
 
-use 5.008001;
+use 5.000000;
 use strict;
 use warnings;
 
@@ -9,21 +9,14 @@ our @ISA = qw(Exporter);
 
 #our $VERSION = '0.41';
 our $VERSION;
-$VERSION = sprintf "%d.%03d", q$Revision: 0.41 $ =~ /: (\d+)\.(\d+)/;
-
+#Name: Release-0-41
+$VERSION = sprintf "%d.%02d", q$Name: Release-0-42 $ =~ /Release-(\d+)-(\d+)/;
 our @EXPORT_OK = qw(
 	addmsg bind checkchar dbopen dbclose dbcreate dbinfo
 	errmsg fetch getnoid hold hold_release hold_set
-	logmsg mint n2xdig note parse_template queue
+	locktest logmsg mint n2xdig note parse_template queue
 	sample scope validate VERSION xdig 
 );
-#our @EXPORT_OK = qw(
-#	addmsg checkchar dbopen dbclose dbcreate update
-#	note dbinfo eachnoid errmsg getnoid count
-#	mint sample validate
-#	VERSION
-#	xdig 
-#);
 
 # Noid - Nice opaque identifiers (Perl module)
 # 
@@ -103,21 +96,21 @@ our @EXPORT_OK = qw(
 # functions and built-ins that you're using (eg, can get into trouble
 # unless you parenthesize your "print" statements).
 
-# XXX many comment blocks are very out of date -- need thorough review
-# XXX make it so that http://uclibs.org/PID/foo maps to 
+# yyy many comment blocks are very out of date -- need thorough review
+# yyy make it so that http://uclibs.org/PID/foo maps to 
 #     ark.cdlib.org/ark:/13030/xzfoo  [ requirement from SCP meeting May 2004]
-# xxx use "wantarray" function to return either number or message
+# yyy use "wantarray" function to return either number or message
 #     when bailing out.
-# xxx add cdlpid doc to pod ?
-# xxx write about comparison with PURLs
-# xxx check chars, authentication, ordinal stored in metadata
+# yyy add cdlpid doc to pod ?
+# yyy write about comparison with PURLs
+# yyy check chars, authentication, ordinal stored in metadata
 # yyy implement mod 4/8/16 distribution within large counter regions?
 # yyy implement count-down counters as well as count-up?
 # yyy make a shadow DB
 
-# xxx upgrade ark-service and ERC.pm (which still use PDB.pm)
+# yyy upgrade ark-service and ERC.pm (which still use PDB.pm)
 
-# xxx bindallow(), binddeny() ????
+# yyy bindallow(), binddeny() ????
 
 use constant NOLIMIT		=> -1;
 use constant SEQNUM_MIN		=>  1;
@@ -130,6 +123,7 @@ use constant SEQNUM_MAX		=>  1000000;
 #
 my $R = ":";		# prefix for global top level of admin db variables
 
+use Fcntl qw(:DEFAULT :flock);
 use BerkeleyDB;
 
 # Global %opendbtab is a hash that maps a hashref (as key) to a database
@@ -147,6 +141,7 @@ my %opendbtab;
 # $flags one of O_RDONLY, O_RDWR, O_CREAT
 
 our ($legalstring, $alphacount, $digitcount);
+our $locktest = 0;
 
 # Adds an error message for a database pointer/object.  If the message
 # pertains to a failed open, the pointer is null, in which case the
@@ -213,7 +208,7 @@ sub bind { my( $noid, $contact, $validate, $how, $id, $elem, $value )=@_;
 	#
 	# yyy to do: check $elem against controlled vocab
 	#     (for errors more than for security)
-	# xxx should this genonly setting be so capable of contradicting
+	# yyy should this genonly setting be so capable of contradicting
 	#     the $validate arg?
 	$$noid{"$R/genonly"} && $validate
 		&& ! validate($noid, "-", $id) and
@@ -340,12 +335,12 @@ sub bind { my( $noid, $contact, $validate, $how, $id, $elem, $value )=@_;
 	$hold and exists($$noid{"$id\t$elem"}) and ! hold_set($noid, $id) and
 		$hold = -1;	# don't just bail out -- we need to unlock
 
-	# XXX $contact info ?  mainly for "long" term identifiers?
+	# yyy $contact info ?  mainly for "long" term identifiers?
 	dbunlock();
 
 	return(
-# XXX should this $id be or not be $oid???
-# XXX should labels for Id and Element be lowercased???
+# yyy should this $id be or not be $oid???
+# yyy should labels for Id and Element be lowercased???
 "Id:      $id
 Element: $elem
 Bind:    $how
@@ -378,9 +373,9 @@ Status:  " . ($hold == -1 ? errmsg($noid) : "ok, $statmsg") . "\n");
 # 461      463      467      479      
 # 487      491      499      503  ...
 
-# XXX other character subsets? eg, 0-9, a-z, and _  (37 chars, with 37 prime)
+# yyy other character subsets? eg, 0-9, a-z, and _  (37 chars, with 37 prime)
 #      this could be mask character 'w' ?
-# XXX there are 94 printable ASCII characters, with nearest lower prime = 89
+# yyy there are 94 printable ASCII characters, with nearest lower prime = 89
 #      a radix of 89 would result in a huge, compact space with check chars
 #      mask character 'c' ?
 
@@ -439,7 +434,7 @@ sub checkchar{ my( $id )=@_;
 	return undef;		# must be request to check, but failed match
 	# xxx test if check char changes on permutations
 	# XXX include test of length to make sure < than 29 (R) chars long
-	# xxx will this work for doi/handles?
+	# yyy will this work for doi/handles?
 }
 
 # Returns an array of cleared ids and byte counts if $verbose is set,
@@ -495,8 +490,8 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 	my ($total, $noid);
 	my $dir = "$dbdir/NOID";
 	my $dbname = "$dir/noid.bdb";
-	# xxx try to use "die" to communicate to caller (graceful?)
-	# xxx how come tie doesn't complain if it exists already?
+	# yyy try to use "die" to communicate to caller (graceful?)
+	# yyy how come tie doesn't complain if it exists already?
 
 	-e $dbname and
 		addmsg(undef, "error: a NOID database already exists in "
@@ -546,8 +541,8 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 				. "an NAA Number, NAA, and SubNAA."),
 			return(undef);
 	# xxx should be able to check naa and naan live against registry
-	# XXX code should invite to apply for NAAN by email to ark@cdlib.org
-	# XXX ARK only? why not DOI/handle?
+	# yyy code should invite to apply for NAAN by email to ark@cdlib.org
+	# yyy ARK only? why not DOI/handle?
 	$term eq "long" && ($naan !~ /\d\d\d\d\d/) and
 		addmsg($noid, qq@error: term of "long" requires a @
 			. "5-digit NAAN (00000 if none), and non-empty "
@@ -571,14 +566,14 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 		: "Creating database for bind-only minter."));
 
 	# Database info
-	# xxx should be using db-> ops directly (for efficiency and?)
+	# yyy should be using db-> ops directly (for efficiency and?)
 	#     so we can use DB_DUP flag
 	$$noid{"$R/naa"} = $naa;
 	$$noid{"$R/naan"} = $naan;
 	$$noid{"$R/subnaa"} = $subnaa || "";
 
 	$$noid{"$R/longterm"} = ($term eq "long");
-	$$noid{"$R/wrap"} = ($term eq "short");		# xxx follow through
+	$$noid{"$R/wrap"} = ($term eq "short");		# yyy follow through
 
 	$$noid{"$R/template"} = $template;
 	$$noid{"$R/prefix"} = $prefix;
@@ -609,7 +604,7 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 
 	$$noid{"$R/version"} = $VERSION;
 
-	# XXX should verify that a given NAAN and NAA are registered,
+	# yyy should verify that a given NAAN and NAA are registered,
 	#     and should offer to register them if not.... ?
 
 	# Capture the properties of this minter.
@@ -632,13 +627,13 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 	# For example, an alphabetical restriction doesn't guarantee
 	# opaqueness, but it indicates that semantics will be limited.
 	#
-	# xxx document that (I)mpressionable has to do with printing, does
+	# yyy document that (I)mpressionable has to do with printing, does
 	#     not apply to general URLs, but does apply to phone numbers and
 	#     ISBNs and ISSNs
-	# xxx document that the opaqueness test is English-centric -- these
+	# yyy document that the opaqueness test is English-centric -- these
 	#     measures work to some extent in English, but not in Welsh(?)
 	#     or "l33t"
-	# xxx document that the properties are numerous enough to look for
+	# yyy document that the properties are numerous enough to look for
 	#     a compact acronym, that the choice of acronym is sort of
 	#     arbitrary, so (GRANITE) was chosen since it's easy to remember
 	#
@@ -650,7 +645,7 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 	my $properties = 
 		($naan ne "" && $naan ne "00000" ? "G" : "-")
 		. ($gen_type eq "random" ? "R" : "-")
-		# XXX substr is supposed to cut off first char
+		# yyy substr is supposed to cut off first char
 		. ($genonly && ($pre . substr($msk, 1)) !~ /eee/ ? "A" : "-")
 		. ($term eq "long" ? "N" : "-")
 		. ($genonly && $prefix !~ /-/ ? "I" : "-")
@@ -663,27 +658,29 @@ sub dbcreate { my( $dbdir, $contact, $template, $term,
 
 	# Now figure out "where" element.
 	#
-	my $child_process_id;
-	my $host;
-	unless (defined($child_process_id = open(CHILD, "-|"))) {
-		die "unable to start child process, $!, stopped";
-		}
-	if ($child_process_id == 0) {
-		# We are in the child.  Set the PATH environment variable.
-		$ENV{"PATH"} = "/bin:/usr/bin";
-		# Run the command we want, with its STDOUT redirected
-		# to the pipe that goes back to the parent.
-		exec "/bin/hostname";
-		die "unable to execute \"/bin/hostname\", $!, stopped";
-		}
-	else {
-		# We are in the parent, and the CHILD file handle is
-		# the read end of the pipe that has its write end as
-		# STDOUT of the child.
-		$host = <CHILD>;
-		close(CHILD);
-		chomp $host;
-		}
+	use Sys::Hostname;
+	my $host = hostname();
+
+#	my $child_process_id;
+#	unless (defined($child_process_id = open(CHILD, "-|"))) {
+#		die "unable to start child process, $!, stopped";
+#		}
+#	if ($child_process_id == 0) {
+#		# We are in the child.  Set the PATH environment variable.
+#		$ENV{"PATH"} = "/bin:/usr/bin";
+#		# Run the command we want, with its STDOUT redirected
+#		# to the pipe that goes back to the parent.
+#		exec "/bin/hostname";
+#		die "unable to execute \"/bin/hostname\", $!, stopped";
+#	}
+#	else {
+#		# We are in the parent, and the CHILD file handle is
+#		# the read end of the pipe that has its write end as
+#		# STDOUT of the child.
+#		$host = <CHILD>;
+#		close(CHILD);
+#		chomp $host;
+#	}
 
 	my $cwd = $dbdir;	# by default, assuming $dbdir is absolute path 
 	if ($dbdir !~ m|^/|) {
@@ -815,32 +812,30 @@ sub dbinfo { my( $noid, $level )=@_;
 	return 1;
 }
 
-# XXX how are we going to lock?
+# yyy eventually we would like to do fancy fine-grained locking with
+#     BerkeleyDB features.  For now, lock before tie(), unlock after untie().
 sub dblock{ return 1;	# placeholder
 }
-
 sub dbunlock{ return 1;	# placeholder
 }
 
 # returns noid: a listref
-# $flags can be DB_RDONLY or 0 (for read/write)
+# $flags can be DB_RDONLY, DB_CREATE, or 0 (for read/write, the default)
 #
-
 sub dbopen { my( $dbname, $flags )=@_;
 
-	# XXX to test: can we now open more than one noid at once?
+	# yyy to test: can we now open more than one noid at once?
 
 	my ($env, $envhome);
-	($envhome = $dbname) =~ s|[^/]+$||;
+	($envhome = $dbname) =~ s|[^/]+$||;	# path ending in "NOID/"
 	! -d $envhome and
 		addmsg(undef, "$envhome not a directory"),
 		return undef;
+	# yyy probably these envflags are overkill right now
 	my $envflags = DB_INIT_LOCK | DB_INIT_TXN | DB_INIT_MPOOL;
 	#my $envflags = DB_INIT_CDB | DB_INIT_MPOOL;
 	($flags & DB_CREATE) and
-#print("db_create\n"),
 		$envflags |= DB_CREATE;
-#print("envflags=$envflags dbi=", DB_INIT_LOCK, "\n");
 	my @envargs = (
 		-Home => $envhome,
 		-Flags => $envflags,
@@ -850,6 +845,7 @@ sub dbopen { my( $dbname, $flags )=@_;
 	# If it exists and is writable, use log file to inscribe BDB errors.
 	#
 	my ($logfile, $logfhandle, $log_opened, $logbdb);
+
 	$logfile = $envhome . "log";
 	$log_opened = open($logfhandle, ">>$logfile");
 	$logbdb = $envhome . "logbdb";
@@ -885,22 +881,65 @@ sub dbopen { my( $dbname, $flags )=@_;
 #
 #=cut
 
-	my $noid = {};
+	my $noid = {};		# eventual minter database handle
+
+	# For now we use simple database-level file locking with a timeout.
+	# Unlocking is implicit when the NOIDLOCK file handle is closed
+	# either explicitly or upon process termination.
+	#
+	my $lockfile = $envhome . "lock";
+	my $timeout = 5;	# max number of seconds to wait for lock
+	my $locktype = (($flags & DB_RDONLY) ? LOCK_SH : LOCK_EX);
+
+	! sysopen(NOIDLOCK, $lockfile, O_RDONLY | O_CREAT) and
+		addmsg(undef, "cannot open \"$lockfile\": $!"),
+		return undef;
+	eval {
+		
+		local $SIG{ALRM} = sub { die("lock timeout after $timeout "
+			. "seconds; consider removing \"$lockfile\"\n")
+		};
+		alarm $timeout;		# alarm goes off in $timeout seconds
+		eval {	# yyy if system has no flock, say in dbcreate profile?
+			flock(NOIDLOCK, $locktype)	# blocking lock
+				or die("cannot flock: $!");
+		};
+		alarm 0;		# cancel the alarm
+		die $@ if $@;		# re-raise the exception
+	};
+	alarm 0;			# race condition protection
+	if ($@) {			# re-raise the exception
+		addmsg(undef, "error: $@");
+		return undef;
+	}
+
 	my $db = tie(%$noid, "BerkeleyDB::Btree",
-#xxxx			-Filename => $dbname,
-			-Filename => "noid.bdb",
+			-Filename => "noid.bdb",	# env has path to it
 			-Flags => $flags,
-##			-Property => DB_DUP,
+## yyy			-Property => DB_DUP,
 			-Env => $env)
 		or addmsg(undef, "tie failed on $dbname: $BerkeleyDB::Error")
 			and return undef;
-	# xxx how to set error code or return string?
+	# yyy how to set error code or return string?
 	#	or die("Can't open database file: $!\n");
 	#print "dbopen: returning hashref=$noid, db=$db\n";
 	$opendbtab{"bdb/$noid"} = $db;
 	$opendbtab{"msg/$noid"} = "";
 	$opendbtab{"log/$noid"} = ($log_opened ? $logfhandle : undef);
+
+	$locktest and
+		print("locktest: holding lock for $locktest seconds...\n"),
+		sleep($locktest);
+
 	return $noid;
+}
+
+# Call with number of seconds to sleep at end of each open.
+# This exists only for the purpose of testing the locking mechanism.
+#
+sub locktest { my( $sleepvalue )=@_;
+	$locktest = $sleepvalue;	# set global variable for locktest
+	return 1;
 }
 
 sub dbclose { my( $noid )=@_;
@@ -909,9 +948,10 @@ sub dbclose { my( $noid )=@_;
 		close($opendbtab{"log/$noid"});
 	undef $opendbtab{"bdb/$noid"};
 	untie %$noid;
+	close NOIDLOCK;		# let go of lock
 }
 
-# xxx is this needed? in present form?
+# yyy is this needed? in present form?
 #
 # get next value and, if no error, change the 2nd and 3rd parameters and
 # return 1, else return 0.  To start at the beginning, the 2nd parameter,
@@ -920,8 +960,8 @@ sub dbclose { my( $noid )=@_;
 # The 3rd parameter will contain the corresponding value.
 
 sub eachnoid { my( $noid, $key, $value )=@_;
-	# xxx check that $db is tied?  this is assumed for now
-	# xxx need to get next non-admin key/value pair
+	# yyy check that $db is tied?  this is assumed for now
+	# yyy need to get next non-admin key/value pair
 	my $db = $opendbtab{"bdb/$noid"};
 	#was: my $flag = ($key ? R_NEXT : R_FIRST);
 	# fix from Jim Fullton:
@@ -1057,7 +1097,7 @@ sub genid { my( $noid )=@_;
 			$$noid{"$R/oacounter"} = 0;
 		}
 		else {
-			init_counters($noid);	# xxx calls dblock -- problem?
+			init_counters($noid);	# yyy calls dblock -- problem?
 		}
 		$oacounter = 0;
 	}
@@ -1166,7 +1206,7 @@ sub set_circ_rec { my( $noid, $id, $circ_svec, $date, $contact )=@_;
 	my $status = 1;
 	my $circ_rec = "$circ_svec|$date|$contact|" . $$noid{"$R/oacounter"};
 
-	# xxx do we care what the previous circ record was?  since right now
+	# yyy do we care what the previous circ record was?  since right now
 	#     we just clobber without looking at it
 
 	dblock();
@@ -1212,7 +1252,7 @@ sub getnoid { my( $noid, $varname )=@_;
 ## The direction parameter is negative, zero, or positive to count down,
 ## reset, or count up upon call.  Returns the current counter value.
 ##
-## (xxx should we make it do zero-padding on the left to a fixed width
+## (yyy should we make it do zero-padding on the left to a fixed width
 ##      determined by number of digits in the total?)
 ##
 #sub count { my( $noid, $direction )=@_;
@@ -1231,7 +1271,7 @@ sub getnoid { my( $noid, $varname )=@_;
 # 
 sub hold { my( $noid, $contact, $on_off, @ids )=@_;
 
-	# xxx what makes sense in this case?
+	# yyy what makes sense in this case?
 	#! $$noid{"$R/template"} and
 	#	addmsg($noid,
 	#		"error: holding makes no sense in a bind-only minter."),
@@ -1408,7 +1448,7 @@ sub init_counters { my( $noid )=@_;
 	my $saclist = "";
 	while ($t > 0) {
 		$$noid{"$R/c${n}/top"} = ($t >= $pctr ? $pctr : $t);
-		$$noid{"$R/c${n}/value"} = 0;		# xxx or 1?
+		$$noid{"$R/c${n}/value"} = 0;		# yyy or 1?
 		$saclist .= "c$n ";
 		$t -= $pctr;
 		$n++;
@@ -1740,7 +1780,7 @@ sub n2xdig { my( $num, $mask )=@_;
 	return $s;
 }
 
-# xxx templates should probably have names, eg, jk##.. could be jk4
+# yyy templates should probably have names, eg, jk##.. could be jk4
 #	or jk22, as in "./noid testdb/jk4 <command> ... "
 
 # Reads template looking for errors and returns the total number of
@@ -2015,7 +2055,7 @@ sub queue { my( $noid, $contact, $when, @ids )=@_;
 				. "longterm id $id being queued for re-issue"))
 		;
 
-		# xxx ignore return OK?
+		# yyy ignore return OK?
 		set_circ_rec($noid, $id,
 				($delete ? 'u' : 'q') . $circ_svec,
 				$currdate, $contact);
@@ -2200,7 +2240,7 @@ sub validate { my( $noid, $template, @ids )=@_;
 			$first .= "/";
 		$first .= $prefix;			# ... if any
 		($varpart = $id) !~ s/^$first// and
-#xxx		    ($varpart = $id) !~ s/^$prefix// and
+#yyy		    ($varpart = $id) !~ s/^$prefix// and
 			push(@retvals, "iderr: $id should begin with $first."),
 			next;
 		# yyy this checkchar algorithm will need an arg when we
@@ -2211,7 +2251,7 @@ sub validate { my( $noid, $template, @ids )=@_;
 		## xxx fix so that a length problem is reported before (or
 		# in addition to) a check char problem
 
-		# xxx needed?
+		# yyy needed?
 		#length($first) + length($mask) - 1 != length($id)
 		#	and push(@retvals,
 		#		"error: $id has should have length "
@@ -2331,9 +2371,13 @@ Noid - routines to mint and manage nice opaque identifiers
 This is very brief documentation for the B<Noid> Perl module subroutines.
 For this early version of the software, it is indispensable to have the
 documentation for the B<noid> utility (the primary user of these routines)
-at hand.  Typically this can be viewed with
+at hand.  Typically that can be viewed with
 
 	perldoc noid
+
+while the present document can be viewed with
+
+	perldoc Noid
 
 The B<noid> utility creates minters (identifier generators) and accepts
 commands that operate them.  A minter efficiently generates, tracks,
@@ -2350,8 +2394,7 @@ management of identifiers ranging from persistent, globally unique
 names -- ARKs, PURLs, URNs, Handles, LSIDs, etc. -- to short-lived,
 compact session keys (cf. UUIDs).  Noid minters are very fast, scalable,
 easy to create and tear down, and have a relatively small footprint.
-They use BerkeleyDB as the underlying database, with locking and
-transactions for concurrency control.
+They use BerkeleyDB as the underlying database.
 
 =begin later
 
@@ -2396,6 +2439,7 @@ Probably.  Please report to jak at ucop dot edu.
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2002-2004 UC Regents.  All rights reserved.
+BSD-type open source license.
 
 =head1 SEE ALSO
 
