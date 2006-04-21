@@ -22,11 +22,6 @@
 
 use Test::More tests => 11;
 
-if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
-	# if PERL5LIB got screwed up by bug in File::Spec->rel2abs
-	$ENV{'PERL5LIB'} = "/ark/local/perllib";
-}
-
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
 my $noid_bin = "blib/script/noid";
@@ -43,14 +38,14 @@ $next_test = -d _;
 ok($this_test, "NOID was created");
 
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "no minter directory created, stopped";
 }
 
 # That "NOID" is a directory.
 ok($next_test, "NOID is a directory");
 
 unless ($next_test) {
-	die "something is seriously wrong, stopped";
+	die "NOID is not a directory, stopped";
 }
 
 # Check for the presence of the "README" file, then "log" file, then the
@@ -63,9 +58,9 @@ ok(-e "$this_dir/NOID/logbdb", "NOID/logbdb was created");
 $this_test = -e "$this_dir/NOID/noid.bdb";
 ok($this_test, "NOID/noid.bdb was created");
 
-# If it wasn't, then there is something seriously wrong, so give up.
+# If it wasn't, then there is something wrong with initialization, so give up.
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "minter initialization failed, stopped";
 }
 
 # Try to queue one.
@@ -74,7 +69,7 @@ system("$noid_cmd queue now 13030/tst27h >/dev/null");
 # Examine the contents of the log.
 unless (open(NOIDLOG, "$this_dir/NOID/log")) {
 	ok(0, "successfully opened \"$this_dir/NOID/log\", $!");
-	die "something is seriously wrong, stopped";
+	die "failed to open log file, stopped";
 }
 
 # Read in the log.
@@ -86,7 +81,7 @@ is(scalar(@log_lines), 4, "number of lines in \"$this_dir/NOID/log\"");
 # If we don't have exactly 4 lines, something is probably very wrong.
 unless (scalar(@log_lines) == 4) {
 	print "log_lines: ", join(", ", @log_lines), "\n";
-	die "something is seriously wrong, stopped";
+	die "something wrong with log format, stopped";
 }
 
 # Remove trailing newlines.

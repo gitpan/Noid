@@ -1,11 +1,12 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Noid
-version:      0.423
-version_from: lib/Noid.pm
+version:      0.424
+version_from: VERSION
 installdirs:  site
 requires:
-    BerkeleyDB:                    0.20
+    BerkeleyDB:                    0
+    Config:                        0
     Fcntl:                         0
     Getopt::Long:                  0
     Sys::Hostname:                 0

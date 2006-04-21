@@ -33,11 +33,6 @@ srand(time( ));
 
 use Test::More tests => 27;
 
-if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
-	# if PERL5LIB got screwed up by bug in File::Spec->rel2abs
-	$ENV{'PERL5LIB'} = "/ark/local/perllib";
-}
-
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
 my $noid_bin = "blib/script/noid";
@@ -54,14 +49,14 @@ $next_test = -d _;
 ok($this_test, "NOID was created");
 
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "no minter directory created, stopped";
 }
 
 # That "NOID" is a directory.
 ok($next_test, "NOID is a directory");
 
 unless ($next_test) {
-	die "something is seriously wrong, stopped";
+	die "NOID is not a directory, stopped";
 }
 
 # Check for the presence of the "README" file, then "log" file, then the
@@ -75,7 +70,7 @@ $this_test = -e "$this_dir/NOID/noid.bdb";
 ok($this_test, "NOID/noid.bdb was created");
 
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "minter initialization failed, stopped";
 }
 
 # Mint two.
@@ -148,7 +143,7 @@ close(BINDCMD);
 ok(scalar(@noid_output) > 0, "\"fetch\" command on noid 1 generated some " .
 	"output");
 unless (scalar(@noid_output) > 0) {
-	die "something is seriously wrong, stopped";
+	die "something wrong with fetch, stopped";
 }
 
 # Remove all newlines.
@@ -167,7 +162,7 @@ is(scalar(@noid_output), 3,
 
 # If there aren't 3 lines of output, somethings is wrong.
 unless (scalar(@noid_output) == 3) {
-	die "something is seriously wrong, stopped";
+	die "something wrong with fetch output, stopped";
 }
 
 # Check first line.
@@ -180,7 +175,7 @@ ok($noid_output[1] =~ /^Circ:\s+/, "line 2 of \"fetch\" output for noid 1");
 # Check third line.
 unless ($noid_output[2] =~ /^\s*(\S+)\s*:\s*(\S+)\s*$/) {
 	ok(0, "line 3 of \"fetch\" output for noid 1");
-	die "something is seriously wrong, stopped";
+	die "something wrong with bound value, stopped";
 }
 
 ok(($1 eq $element1) && ($2 eq $value1),
@@ -192,7 +187,7 @@ ok(($1 eq $element1) && ($2 eq $value1),
 ok(scalar(@noid_output) > 0, "\"fetch\" command on noid 2 generated some " .
 	"output");
 unless (scalar(@noid_output) > 0) {
-	die "something is seriously wrong, stopped";
+	die "something wrong with fetched value, stopped";
 }
 
 # Remove all newlines.
@@ -209,9 +204,9 @@ while ((scalar(@noid_output) > 0) &&
 is(scalar(@noid_output), 12,
 	"there are 12 lines of output from the \"fetch\" command on noid 2");
 
-# If there aren't 12 lines of output, somethings is wrong.
+# If there aren't 12 lines of output, something is wrong.
 unless (scalar(@noid_output) == 12) {
-	die "something is seriously wrong, stopped";
+	die "not enough lines of output, stopped";
 }
 
 # Check first line.
@@ -224,7 +219,7 @@ ok($noid_output[1] =~ /^Circ:\s+/, "line 2 of \"fetch\" output for noid 2");
 # Check third line.
 unless ($noid_output[2] =~ /^\s*(\S+)\s*:\s*(\S+)\s*$/) {
 	ok(0, "line 3 of \"fetch\" output for noid 2");
-	die "something is seriously wrong, stopped";
+	die "something wrong with fetch output, stopped";
 }
 
 ok(($1 eq $element2) && ($2 eq $value2[0]),

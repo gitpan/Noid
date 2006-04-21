@@ -25,11 +25,6 @@ sub get_policy;
 
 use Test::More tests => 9;
 
-if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
-	# if PERL5LIB got screwed up by bug in File::Spec->rel2abs
-	$ENV{'PERL5LIB'} = "/ark/local/perllib";
-}
-
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
 my $noid_bin = "blib/script/noid";

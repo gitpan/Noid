@@ -8,7 +8,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our $VERSION;
-$VERSION = sprintf "%d.%02d", q$Name: Release-0-423 $ =~ /Release-(\d+)-(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Name: Release-0-424 $ =~ /Release-(\d+)-(\d+)/;
 our @EXPORT_OK = qw(
 	addmsg bind checkchar dbopen dbclose dbcreate dbinfo
 	errmsg fetch getnoid hold hold_release hold_set
@@ -22,7 +22,7 @@ our @EXPORT_OK = qw(
 #		Originally created, UCSF/CKM, November 2002
 # 
 # ---------
-# Copyright (c) 2002-2004 UC Regents
+# Copyright (c) 2002-2006 UC Regents
 # 
 # Permission to use, copy, modify, distribute, and sell this software and
 # its documentation for any purpose is hereby granted without fee, provided
@@ -2446,7 +2446,7 @@ Probably.  Please report to jak at ucop dot edu.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2002-2004 UC Regents.  BSD-type open source license.
+Copyright 2002-2006 UC Regents.  BSD-type open source license.
 
 =head1 SEE ALSO
 

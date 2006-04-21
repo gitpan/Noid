@@ -4,9 +4,9 @@ Makefile.PL
 MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
 noid
-README
 noid.pdf
 Noid.pdf
+README
 t/bind.t
 t/dbcreate.t
 t/noid1.t

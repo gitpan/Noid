@@ -22,11 +22,6 @@
 
 use Test::More tests => 8;
 
-if ($ENV{'PERL5LIB'} =~ /:.*:.*:/) {		# kludge
-	# if PERL5LIB got screwed up by bug in File::Spec->rel2abs
-	$ENV{'PERL5LIB'} = "/ark/local/perllib";
-}
-
 my $this_dir = ".";
 my $rm_cmd = "/bin/rm -rf $this_dir/NOID > /dev/null 2>&1 ";
 my $noid_bin = "blib/script/noid";
@@ -43,14 +38,14 @@ $next_test = -d _;
 ok($this_test, "NOID was created");
 
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "no minter directory created, stopped";
 }
 
 # That "NOID" is a directory.
 ok($next_test, "NOID is a directory");
 
 unless ($next_test) {
-	die "something is seriously wrong, stopped";
+	die "NOID is not a directory, stopped";
 }
 
 # Check for the presence of the "README" file, then "log" file, then the
@@ -64,7 +59,7 @@ $this_test = -e "$this_dir/NOID/noid.bdb";
 ok($this_test, "NOID/noid.bdb was created");
 
 unless ($this_test) {
-	die "something is seriously wrong, stopped";
+	die "minter initialization failed, stopped";
 }
 
 # Try binding the 3rd identifier to be minted.
